@@ -1,5 +1,12 @@
+use std::io::Read;
+
 #[allow(non_snake_case)]
 #[allow(unused_variables)]
+#[allow(array_into_iter)]
+#[allow(dead_code)]
+
+mod connection_routing;
+use connection_routing::{connection_routing::PeerID, connection_routing::Player};
 
 fn main() 
 {
@@ -7,7 +14,8 @@ fn main()
 
 //  Actually start the basic testing
 
-	let socket = std::net::SocketAddrV4::new(std::net::Ipv4Addr::new(127, 0, 0, 1), 8080);
+	let port = 8080;
+	let socket = std::net::SocketAddrV4::new(std::net::Ipv4Addr::new(127, 0, 0, 1), port);
 
 /*
 *	Essentially, what I need to figure out here is both how to write decent Rust
@@ -16,22 +24,34 @@ fn main()
 *	Here, what I am testing is if I can have a loop for looking for new connections
 *	and then "routing" them to something, or rather, an actual TCP socket connection I guess?
 */
-	let inputStream = std::net::TcpListener::bind(socket).unwrap();
+	let _inputStream = std::net::TcpListener::bind(socket).unwrap();
 
-	for packet in inputStream.incoming()
+	// _inputStream.
+
+	for packet in _inputStream.incoming()
 	{
 		match packet
 		{
-			Ok(packet) =>
+			Ok(mut data) =>
 			{
-				println!("Connection Succeeded")
+				println!("Connection Succeeded");
 
-//				packet.peer_addr()
+				let mut datareceived = String::new();
+
+				data.read_to_string(&mut datareceived);
+
+				let peeraddr = data.peer_addr().unwrap();
+
+				let peersocket = std::net::SocketAddr::new(peeraddr.ip(), port);
+
+				let player = Player::new(peersocket, "name", 0);
 			}
 			
 			Err(e) =>
 			{
 				println!("ERROR! Connection Failed");
+				
+				
 			}
 		}
 	}
