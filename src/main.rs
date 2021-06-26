@@ -40,17 +40,14 @@ fn main() {
 				println!("Connection Succeeded");
 
 				let mut datareceived = String::new();
+				let peeraddr = data.peer_addr().unwrap();
+				let peersocket = std::net::SocketAddr::new(peeraddr.ip(), port);
 
 				data.read_to_string(&mut datareceived).unwrap();
-
-				let peeraddr = data.peer_addr().unwrap();
-
-				let peersocket = std::net::SocketAddr::new(peeraddr.ip(), port);
 
 				println!("{}", datareceived);
 
 				let player = connection_routing::Player::new(peersocket, "name", 0);
-
 				
 																//For some godforsaken reason this is a closure?
 				user_map.entry(PeerID::newWithName(get_user_id(datareceived))).or_insert_with(|| player);
