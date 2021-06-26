@@ -7,7 +7,7 @@ fn main()
 
 //  Actually start the basic testing
 
-	let socket = std::net::SocketAddrV4::new(std::net::Ipv4Addr::new(127, 0, 0, 1), 8081);
+	let socket = std::net::SocketAddrV4::new(std::net::Ipv4Addr::new(127, 0, 0, 1), 8080);
 
 /*
 *	Essentially, what I need to figure out here is both how to write decent Rust
