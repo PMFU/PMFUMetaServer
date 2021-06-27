@@ -1,16 +1,16 @@
 use std::io::Read;
 use std::collections::HashMap;
 
-use crate::connection_routing::PeerID;
-
 #[allow(non_snake_case)]
 #[allow(unused_variables)]
 #[allow(array_into_iter)]
 #[allow(dead_code)]
 
 mod connection_routing;
+use crate::connection_routing::{PeerID, Player};
 
-fn main() {
+fn main() 
+{
 	println!("Hello, world!");
 
 	//  Actually start the basic testing
