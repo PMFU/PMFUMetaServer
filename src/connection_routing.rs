@@ -1,6 +1,6 @@
 
 
-pub struct clientData
+pub struct ClientData
 {
 	id: u32,
 

@@ -1,8 +1,5 @@
-use std::borrow::BorrowMut;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::collections::HashMap;
-
-use enet::Enet;
 
 #[allow(non_snake_case)]
 #[allow(unused_variables)]
@@ -59,8 +56,8 @@ fn main()
 
 				println!("{}", datareceived);
 
-				
-				peervec.push(std::net::TcpStream::connect(peeraddr).unwrap());
+				let mut stream = std::net::TcpStream::connect(peeraddr).unwrap();
+				peervec.push(stream);
 
 				//let player = connection_routing::Player::new(peersocket, "name", 0);
 				
@@ -74,9 +71,9 @@ fn main()
 			}
 		}
 
-		for peer in peervec
+		for peer in peervec.iter_mut()
 		{
-			// peer
+			peer.write("buf".as_bytes()).unwrap();
 		}
 	}
 }
@@ -100,4 +97,21 @@ fn get_user_id(str: String) -> String
 	}
 
 	string
+}
+
+
+fn xyz()
+{
+	let port = 6969;
+	let socket = std::net::SocketAddrV4::new(std::net::Ipv4Addr::new(127, 0, 0, 1), port);
+
+	let mut x = std::net::TcpStream::connect(socket).unwrap();
+
+	loop
+	{
+		let mut s = String::new();
+		x.read_to_string(&mut s).unwrap();
+
+		println!("{}", s);
+	}
 }
