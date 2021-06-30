@@ -16,10 +16,10 @@ fn main() {
     println!("Hello, world!");
 
     stdout().flush().unwrap();
-    //  Actually start the basic testing
 
-    client_run();
-    //server_run();
+
+    //client_run();
+    server_run();
 }
 
 fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut HashMap<u32, Game>) {
@@ -42,9 +42,13 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
         }
 
         Event::Disconnect(peer, id) => {
-			println!("User {}, from IP {}, disconnected", id, peer.address().ip().to_string());
+            println!(
+                "User {}, from IP {}, disconnected",
+                id,
+                peer.address().ip().to_string()
+            );
 
-			*top_id -= 1;
+            *top_id -= 1;
         }
 
         Event::Receive {
@@ -94,8 +98,7 @@ fn client_run() {
 
     let peer = client.connect(&remote_addr, 4, 1).unwrap();
 
-    if peer.state() == PeerState::Connected
-    {
+    if peer.state() == PeerState::Connected {
         println!("State is connected!");
     }
 
@@ -157,7 +160,6 @@ fn client_run() {
     }
 
     println!("Disconnected!");
-
 }
 
 //Server Run
