@@ -166,8 +166,7 @@ fn client_run() {
 
 fn server_run() {
     let port = 6969;
-    let mut ipaddr = std::net::Ipv4Addr::new(127, 0, 0, 1);
-    ipaddr = std::net::Ipv4Addr::LOCALHOST;
+    let ipaddr = std::net::Ipv4Addr::UNSPECIFIED;
     let local_addr = enet::Address::new(ipaddr, port);
 
     let enetapi = enet::Enet::new().unwrap();
