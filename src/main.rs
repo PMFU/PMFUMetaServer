@@ -10,7 +10,7 @@ use std::{
 };
 
 use connection_routing::Game;
-use enet::{Event, Packet};
+use enet::{Event, Packet, PeerState};
 
 fn main() {
     println!("Hello, world!");
@@ -18,8 +18,8 @@ fn main() {
     stdout().flush().unwrap();
     //  Actually start the basic testing
 
-    //client_run();
-    server_run();
+    client_run();
+    //server_run();
 }
 
 fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut HashMap<u32, Game>) {
@@ -74,8 +74,10 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
 fn client_run() {
     let port = 6969;
     let mut ipaddr = std::net::Ipv4Addr::LOCALHOST;
-    ipaddr = std::net::Ipv4Addr::new(127, 0, 0, 1);
+    ipaddr = std::net::Ipv4Addr::new(10, 0, 1, 64);
     let remote_addr = enet::Address::new(ipaddr, port);
+
+    println!("Connecting to {}", ipaddr.to_string());
 
     let enetapi = enet::Enet::new().unwrap();
 
@@ -91,6 +93,11 @@ fn client_run() {
         .unwrap();
 
     let peer = client.connect(&remote_addr, 4, 1).unwrap();
+
+    if peer.state() == PeerState::Connected
+    {
+        println!("State is connected!");
+    }
 
     let e = client.service(1000).unwrap();
 
