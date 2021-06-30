@@ -4,157 +4,195 @@
 #[allow(dead_code)]
 mod connection_routing;
 
-use std::{collections::HashMap, io::{stdout, Read, Write}, ops::Index};
+use std::{
+    collections::HashMap,
+    io::{stdout, Read, Write},
+};
 
 use connection_routing::Game;
 use enet::{Event, Packet};
 
 fn main() {
-	println!("Hello, world!");
+    println!("Hello, world!");
 
-	//  Actually start the basic testing
+    stdout().flush().unwrap();
+    //  Actually start the basic testing
 
-	let port = 6969;
-	let ipaddr = std::net::Ipv4Addr::new(127, 0, 0, 1);
-	let local_addr = enet::Address::new(ipaddr, port);
-
-	stdout().flush().unwrap();
-
-	let enetapi = enet::Enet::new().unwrap();
-
-	//Server init
-
-	let max_peers_count = 128;
-
-	//Create a server on the localhost
-	let mut server = enetapi
-		.create_host::<u32>(
-			Some(&local_addr),
-			max_peers_count,
-			enet::ChannelLimit::Maximum,
-			enet::BandwidthLimit::Unlimited,
-			enet::BandwidthLimit::Unlimited,
-		)
-		.unwrap();
-
-	//let clientdata: json::Array;
-
-	//Data Hash Maps
-	//let mut client_map = HashMap::<u32, ClientData>::new();
-	let mut game_map = HashMap::<u32, Game>::new();
-
-	//
-	//for mut peer in server.peers() {}
-
-	game_map.insert(0, Game::new(ipaddr, "lobby_name".to_owned(), None));
-
-	//Start loop
-	let mut id = 0;
-
-	loop {
-		do_update(&mut server, &mut id, &mut game_map);
-	}
+    //client_run();
+    server_run();
 }
 
 fn do_update(server: &mut enet::Host<u32>, id: &mut u32, game_map: &mut HashMap<u32, Game>) {
-	let event = server.service(1000).unwrap();
+    let event = server.service(100).unwrap();
 
-	if event.is_none() {
-		return;
-	}
+    if event.is_none() {
+        return;
+    }
 
-	match &mut event.unwrap() {
-		Event::Connect(peer) => {
-			println!(
-				"Connection from peer! IP: {}",
-				peer.address().ip().to_string()
-			);
+    match &mut event.unwrap() {
+        Event::Connect(peer) => {
+            println!(
+                "Connection from peer! IP: {}",
+                peer.address().ip().to_string()
+            );
 
-			*id += 1;
+            *id += 1;
 
-			//let addr = peer.address();
-		}
+            //let addr = peer.address();
+        }
 
-		Event::Disconnect(peer, id) => {
-			let local_id = id.to_owned();
-			peer.disconnect(local_id);
-		}
+        Event::Disconnect(peer, id) => {
+            let local_id = id.to_owned();
+        }
 
-		Event::Receive {
-			sender,
-			channel_id,
-			packet,
-		} => {
-			let mut str = String::new();
-			packet.data().read_to_string(&mut str).unwrap();
+        Event::Receive {
+            sender,
+            channel_id,
+            packet,
+        } => {
+            let mut str = String::new();
+            packet.data().read_to_string(&mut str).unwrap();
 
-			// sender.address().ip().to_string()
-			print!("From channel :{} ", channel_id);
+            str = str.trim_end().to_string();
 
-			println!(
-				"Data: {} | from IP: {}",
-				str,
-				sender.address().ip().to_string()
-			);
-		}
-	};
+            // sender.address().ip().to_string()
+            println!("From channel: {} ", channel_id);
+
+            println!(
+                "Data: {} \nFrom IP: {}",
+                str,
+                sender.address().ip().to_string()
+            );
+        }
+    };
 }
 
-//Client Example
+//Client Run
 
-fn client_example() {
-	let port = 6969;
-	let remote_addr = enet::Address::new(std::net::Ipv4Addr::new(127, 0, 0, 1), port);
+fn client_run() {
+    let port = 6969;
+    let mut ipaddr = std::net::Ipv4Addr::LOCALHOST;
+    ipaddr = std::net::Ipv4Addr::new(127, 0, 0, 1);
+    let remote_addr = enet::Address::new(ipaddr, port);
 
-	let enetapi = enet::Enet::new().unwrap();
+    let enetapi = enet::Enet::new().unwrap();
 
-	//Create a connector (DOESN'T NEED IP) | Connects to server over network
-	let mut client = enetapi
-		.create_host::<u32>(
-			None,
-			1,
-			enet::ChannelLimit::Maximum,
-			enet::BandwidthLimit::Unlimited,
-			enet::BandwidthLimit::Unlimited,
-		)
-		.unwrap();
+    //Create a connector (DOESN'T NEED IP) | Connects to server over network
+    let mut client = enetapi
+        .create_host::<u32>(
+            None,
+            1,
+            enet::ChannelLimit::Limited(4),
+            enet::BandwidthLimit::Unlimited,
+            enet::BandwidthLimit::Unlimited,
+        )
+        .unwrap();
 
-	client.connect(&remote_addr, 1, 1).unwrap();
+    let peer = client.connect(&remote_addr, 4, 1).unwrap();
 
-	let mut id = 0;
+    let e = client.service(1000).unwrap();
 
-	let mut game_map = HashMap::<u32, Game>::new();
+    if e.is_none() {
+        println!("The Connection Was Unsuccessful");
+        return;
+    }
 
-	loop {
-		do_update(&mut client, &mut id, &mut game_map);
+    match &mut e.unwrap() {
+        Event::Connect(peer) => {
+            println!(
+                "Connection from peer! IP: {}",
+                peer.address().ip().to_string()
+            );
+        }
 
-		let mut input = String::new();
-		match std::io::stdin().read_line(&mut input) {
-			Ok(n) => {
-				println!("{} bytes read", n);
-				println!("{}", input);
-			}
-			Err(error) => println!("error: {}", error),
-		}
+        Event::Disconnect(peer, id) => {}
 
-		input.truncate(input.len() - 2);
+        Event::Receive {
+            sender,
+            channel_id,
+            packet,
+        } => {}
+    };
 
-		if input.is_empty() || input == "STOP" {
-			break;
-		}
+    let mut id = 0;
 
-		for mut peer in client.peers().into_iter() {
-			peer.send_packet(
-				Packet::new(input.as_bytes(), enet::PacketMode::ReliableSequenced).unwrap(),
-				0,
-			)
-			.unwrap();
-		}
-	}
+    let mut game_map = HashMap::<u32, Game>::new();
 
-	println!("Disconnected!");
+    loop {
+        do_update(&mut client, &mut id, &mut game_map);
 
-	for mut peer in client.peers().into_iter() {
-		peer.disconnect(*peer.data().unwrap());
-	}
+        //Get console input
+        let mut input = String::new();
+        match std::io::stdin().read_line(&mut input) {
+            Ok(n) => {
+                println!("{} bytes read", n);
+                //println!("{}", input);
+            }
+            Err(error) => println!("error: {}", error),
+        }
+
+        //input.truncate(input.len() - 2);
+
+        if input.is_empty() || input == "STOP" {
+            break;
+        }
+
+        //Send Packet
+        for mut peer in client.peers().into_iter() {
+            peer.send_packet(
+                Packet::new(input.as_bytes(), enet::PacketMode::ReliableSequenced).unwrap(),
+                0,
+            )
+            .unwrap();
+        }
+    }
+
+    println!("Disconnected!");
+
+    for mut peer in client.peers().into_iter() {
+        peer.disconnect(*peer.data().unwrap());
+    }
+}
+
+//Server Run
+
+fn server_run() {
+    let port = 6969;
+    let mut ipaddr = std::net::Ipv4Addr::LOCALHOST;
+    ipaddr = std::net::Ipv4Addr::new(127, 0, 0, 1);
+    let local_addr = enet::Address::new(ipaddr, port);
+
+    let enetapi = enet::Enet::new().unwrap();
+
+    //Server init
+
+    let max_peers_count = 32;
+
+    //Create a server on the localhost
+    let mut server = enetapi
+        .create_host::<u32>(
+            Some(&local_addr),
+            max_peers_count,
+            enet::ChannelLimit::Limited(4),
+            enet::BandwidthLimit::Unlimited,
+            enet::BandwidthLimit::Unlimited,
+        )
+        .unwrap();
+    server.flush();
+
+    //Data Hash Maps
+    //let mut client_map = HashMap::<u32, ClientData>::new();
+    let mut game_map = HashMap::<u32, Game>::new();
+
+    //
+    //for mut peer in server.peers() {}
+
+    game_map.insert(0, Game::new(ipaddr, "lobby_name".to_owned(), None));
+
+    //Start loop
+    let mut id = 0;
+
+    loop {
+        do_update(&mut server, &mut id, &mut game_map);
+    }
 }
