@@ -3,6 +3,7 @@
 #[allow(array_into_iter)]
 #[allow(dead_code)]
 mod connection_routing;
+mod packet_enums;
 
 use std::{
     collections::HashMap,
@@ -12,11 +13,14 @@ use std::{
 use connection_routing::Game;
 use enet::{Event, Packet, PeerState};
 
+use crate::packet_enums::PacketType;
+
 fn main() {
     println!("Hello, world!");
 
     stdout().flush().unwrap();
 
+    println!("{:?}", PacketType::RequestServerList);
 
     //client_run();
     server_run();

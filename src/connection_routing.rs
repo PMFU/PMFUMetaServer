@@ -7,6 +7,8 @@ use std::collections::HashMap;
 use enet::Packet;
 use json::JsonValue;
 
+use crate::packet_enums::{packet_to_type, PacketType};
+
 pub struct ClientData {
     id: u32,
 
@@ -25,11 +27,33 @@ pub fn send_game_list_packet(games: HashMap<u32, Game>, client: &mut enet::Peer<
         packet[json::stringify(id)] = gamejson.into();
     }
 
-    let str = packet.pretty(1);
+    let mut str = format!("{:?}", PacketType::RequestServerList);
+    str.push_str(packet.pretty(1).as_str());
 
     let data_packet = Packet::new(str.as_bytes(), enet::PacketMode::ReliableSequenced).unwrap();
 
     client.send_packet(data_packet, 0).unwrap();
+}
+
+pub fn handle_packet(
+    sender: &mut enet::Peer<u32>,
+    packet: &mut Packet,
+    channel_id: u8,
+    games: HashMap<u32, Game>,
+) {
+    let packettype = packet_to_type(packet);
+
+    match packettype {
+        PacketType::None => {}
+
+        PacketType::RequestServerList => {
+            send_game_list_packet(games, sender);
+        }
+
+        PacketType::LobbyData => {}
+
+        PacketType::NumTypes => {}
+    }
 }
 
 pub struct Game {
