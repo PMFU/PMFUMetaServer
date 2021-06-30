@@ -1,88 +1,99 @@
-//use std::collections::HashMap;
-use std::io::{Read, Write};
-
-use enet::Event;
-
 #[allow(non_snake_case)]
 #[allow(unused_variables)]
 #[allow(array_into_iter)]
 #[allow(dead_code)]
+
 mod connection_routing;
+//use std::collections::HashMap;
+use std::io::{Read, Write, stdout};
+
+use enet::Event;
 
 fn main() {
-    println!("Hello, world!");
+	println!("Hello, world!");
 
-    //  Actually start the basic testing
+	//  Actually start the basic testing
 
-    let port = 6969;
-    let addr = enet::Address::new(std::net::Ipv4Addr::new(127, 0, 0, 1), port);
-    let _socket = std::net::SocketAddrV4::new(std::net::Ipv4Addr::new(127, 0, 0, 1), port);
+	let port = 6969;
+	let addr = enet::Address::new(std::net::Ipv4Addr::new(127, 0, 0, 1), port);
+	let _socket = std::net::SocketAddrV4::new(std::net::Ipv4Addr::new(127, 0, 0, 1), port);
 
-    let enetapi = enet::Enet::new().unwrap();
+	stdout().flush().unwrap();
 
-    let mut server = enetapi
-        .create_host::<u32>(
-            Some(&addr),
-            100,
-            enet::ChannelLimit::Maximum,
-            enet::BandwidthLimit::Unlimited,
-            enet::BandwidthLimit::Unlimited,
-        )
-        .unwrap();
+	let enetapi = enet::Enet::new().unwrap();
 
-    /*
-    	*	Essentially, what I need to figure out here is both how to write decent Rust
-    	*	and how to use the networking libriary which is a decent library ngl
-    	*
-    	*	Here, what I am testing is if I can have a loop for looking for new connections
-    	*	and then "routing" them to something, or rather, an actual TCP socket connection I guess?
-    	*/
+	let max_peers_count = 128;
 
-    //let clientdata: json::Array;
+	let mut server = enetapi
+		.create_host::<u32>(
+			Some(&addr),
+			max_peers_count,
+			enet::ChannelLimit::Maximum,
+			enet::BandwidthLimit::Unlimited,
+			enet::BandwidthLimit::Unlimited,
+		)
+		.unwrap();
 
-    let mut id = 0;
+	/*
+		*	Essentially, what I need to figure out here is both how to write decent Rust
+		*	and how to use the networking libriary which is a decent library ngl
+		*
+		*	Here, what I am testing is if I can have a loop for looking for new connections
+		*	and then "routing" them to something, or rather, an actual TCP socket connection I guess?
+		*/
 
-    do_update(&mut server, &mut id);
+	//let clientdata: json::Array;
+
+	let mut id = 0;
+	
+	loop {
+		do_update(&mut server, &mut id);
+		
+		
+	}
 }
 
 fn do_update(server: &mut enet::Host<u32>, id: &mut u32) {
-    let event = server.service(1000).unwrap();
-	
-    match &mut event.unwrap() {
-        Event::Connect(peer) => {
-            println!(
-                "Connection from peer! IP: {}",
-                peer.address().ip().to_string()
-            );
+	let event = server.service(1000).unwrap();
 
-            let id_local = id.to_owned();
-            id.checked_add(1);
+	if event.is_none()
+	{
+		return;
+	}
 
-            let addr = peer.address();
+	match &mut event.unwrap() {
+		Event::Connect(peer) => {
+			println!(
+				"Connection from peer! IP: {}",
+				peer.address().ip().to_string()
+			);
 
-            server.connect(&addr, 4, id_local);
-        }
+			*id += 1;
 
-        Event::Disconnect(peer, id) => {
-            let local_id = id.to_owned();
-            peer.disconnect(local_id);
-        }
+			//let addr = peer.address();
+		}
 
-        Event::Receive {
-            sender,
-            channel_id,
-            packet,
-        } => {
-            let mut str = String::new();
-            packet.data().read_to_string(&mut str);
+		Event::Disconnect(peer, id) => {
+			let local_id = id.to_owned();
+			peer.disconnect(local_id);
+		}
 
-            // sender.address().ip().to_string()
+		Event::Receive {
+			sender,
+			channel_id,
+			packet,
+		} => {
+			let mut str = String::new();
+			packet.data().read_to_string(&mut str).unwrap();
 
-            println!(
-                "Data: {} | from IP: {}",
-                str,
-                sender.address().ip().to_string()
-            );
-        }
-    };
+			// sender.address().ip().to_string()
+			print!("From channel :{} ", channel_id);
+
+			println!(
+				"Data: {} | from IP: {}",
+				str,
+				sender.address().ip().to_string()
+			);
+		}
+	};
 }

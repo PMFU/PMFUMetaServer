@@ -20,7 +20,7 @@ pub struct ClientData {
     name: Option<String>,
 }
 
-fn xyz() {
+fn client_example() {
     let port = 6969;
     let addr = enet::Address::new(std::net::Ipv4Addr::new(127, 0, 0, 1), port);
     let socket = std::net::SocketAddrV4::new(std::net::Ipv4Addr::new(127, 0, 0, 1), port);
