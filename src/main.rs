@@ -22,7 +22,7 @@ fn main() {
     server_run();
 }
 
-fn do_update(server: &mut enet::Host<u32>, id: &mut u32, game_map: &mut HashMap<u32, Game>) {
+fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut HashMap<u32, Game>) {
     let event = server.service(100).unwrap();
 
     if event.is_none() {
@@ -36,13 +36,15 @@ fn do_update(server: &mut enet::Host<u32>, id: &mut u32, game_map: &mut HashMap<
                 peer.address().ip().to_string()
             );
 
-            *id += 1;
+            *top_id += 1;
 
             //let addr = peer.address();
         }
 
         Event::Disconnect(peer, id) => {
-            let local_id = id.to_owned();
+			println!("User {}, from IP {}, disconnected", id, peer.address().ip().to_string());
+
+			*top_id -= 1;
         }
 
         Event::Receive {
@@ -131,7 +133,7 @@ fn client_run() {
             Err(error) => println!("error: {}", error),
         }
 
-        //input.truncate(input.len() - 2);
+        input.truncate(input.len() - 2);
 
         if input.is_empty() || input == "STOP" {
             break;
@@ -149,17 +151,14 @@ fn client_run() {
 
     println!("Disconnected!");
 
-    for mut peer in client.peers().into_iter() {
-        peer.disconnect(*peer.data().unwrap());
-    }
 }
 
 //Server Run
 
 fn server_run() {
     let port = 6969;
-    let mut ipaddr = std::net::Ipv4Addr::LOCALHOST;
-    ipaddr = std::net::Ipv4Addr::new(127, 0, 0, 1);
+    let mut ipaddr = std::net::Ipv4Addr::new(127, 0, 0, 1);
+    ipaddr = std::net::Ipv4Addr::LOCALHOST;
     let local_addr = enet::Address::new(ipaddr, port);
 
     let enetapi = enet::Enet::new().unwrap();
