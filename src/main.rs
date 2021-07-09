@@ -132,7 +132,23 @@ fn client_run() {
             sender,
             channel_id,
             packet,
-        } => {}
+        } => {
+
+            let mut str = String::new();
+            packet.data().read_to_string(&mut str).unwrap();
+
+            str = str.trim_end().to_string();
+
+            // sender.address().ip().to_string()
+            println!("From channel: {} ", channel_id);
+
+            println!(
+                "Data: {} \nFrom IP: {}",
+                str,
+                sender.address().ip().to_string()
+            );
+            
+        }
     };
 
     let mut id = 0;
