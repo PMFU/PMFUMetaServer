@@ -22,6 +22,8 @@ fn main() {
 
     println!("{:?}", PacketType::RequestServerList);
 
+    //OPEN THE PORTS
+
     //client_run();
     server_run();
 }
@@ -42,6 +44,8 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
 
             *top_id += 1;
 
+            peer.set_data(Some(1));
+
             //let addr = peer.address();
         }
 
@@ -53,6 +57,8 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
             );
 
             *top_id -= 1;
+
+            peer.set_data(None);
         }
 
         Event::Receive {
@@ -78,7 +84,6 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
 }
 
 //Client Run
-
 fn client_run() {
     let port = 6969;
     let mut ipaddr = std::net::Ipv4Addr::LOCALHOST;
@@ -119,6 +124,8 @@ fn client_run() {
                 "Connection from peer! IP: {}",
                 peer.address().ip().to_string()
             );
+
+            peer.set_data(Some(1));
         }
 
         Event::Disconnect(peer, id) => {}
@@ -167,9 +174,8 @@ fn client_run() {
 }
 
 //Server Run
-
 fn server_run() {
-    let port = 6969;
+    let port = 42069;
     let ipaddr = std::net::Ipv4Addr::UNSPECIFIED;
     let local_addr = enet::Address::new(ipaddr, port);
 
@@ -205,5 +211,23 @@ fn server_run() {
 
     loop {
         do_update(&mut server, &mut id, &mut game_map);
+
+        send_packet(&mut server);
     }
+}
+
+fn send_packet(h: &mut enet::Host<u32>)
+{
+    for mut peer in h.peers().into_iter() {
+        if peer.data().is_none()
+        {
+            continue;
+        }
+        peer.send_packet(
+            Packet::new("TESTING BIG MIGUEL".as_bytes(), enet::PacketMode::ReliableSequenced).unwrap(),
+            0,
+        )
+        .unwrap();
+    }
+
 }
