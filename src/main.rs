@@ -83,7 +83,7 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
 
 //Client Run
 fn client_run() {
-    let port = 6969;
+    let port = 42069;
     let mut ipaddr = std::net::Ipv4Addr::LOCALHOST;
     ipaddr = std::net::Ipv4Addr::new(10, 0, 1, 64);
     let remote_addr = enet::Address::new(ipaddr, port);
