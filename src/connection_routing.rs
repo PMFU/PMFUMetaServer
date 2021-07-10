@@ -115,3 +115,30 @@ pub fn get_user_id(str: String) -> String {
 
     string
 }
+
+pub fn open_port(port: u16)
+{
+    //OPEN THE PORTS
+    match igd::search_gateway(Default::default()) {
+        Err(ref err) => println!("Error: {}", err),
+        Ok(gateway) => {
+            
+            let local_address = match std::env::args().nth(1) {
+                Some(local_address) => local_address,
+                None => panic!("Expected IP address (cargo run <your IP here>)"),
+            };
+            let local_address = local_address.parse::<std::net::Ipv4Addr>().unwrap();
+            let local_address = std::net::SocketAddrV4::new(local_address, port);
+ 
+            match gateway.add_port(igd::PortMappingProtocol::UDP, port, local_address, 60, "add_port example") {
+                Err(ref err) => {
+                    println!("There was an error! {}", err);
+                }
+                Ok(()) => {
+                    println!("It worked");
+                }
+            }
+        }
+     }
+ 
+}
