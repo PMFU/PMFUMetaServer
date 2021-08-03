@@ -10,7 +10,7 @@ use std::{
     io::{stdout, Read, Write},
 };
 
-use connection_routing::{Game, open_port};
+use connection_routing::{open_port, Lobby};
 use enet::{Event, Packet, PeerState};
 
 use crate::packet_enums::PacketType;
@@ -26,7 +26,7 @@ fn main() {
     server_run();
 }
 
-fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut HashMap<u32, Game>) {
+fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut HashMap<u32, Lobby>) {
     let event = server.service(100).unwrap();
 
     if event.is_none() {
@@ -133,7 +133,6 @@ fn client_run() {
             channel_id,
             packet,
         } => {
-
             let mut str = String::new();
             packet.data().read_to_string(&mut str).unwrap();
 
@@ -147,13 +146,12 @@ fn client_run() {
                 str,
                 sender.address().ip().to_string()
             );
-            
         }
     };
 
     let mut id = 0;
 
-    let mut game_map = HashMap::<u32, Game>::new();
+    let mut game_map = HashMap::<u32, Lobby>::new();
 
     loop {
         do_update(&mut client, &mut id, &mut game_map);
@@ -214,12 +212,12 @@ fn server_run() {
 
     //Data Hash Maps
     //let mut client_map = HashMap::<u32, ClientData>::new();
-    let mut game_map = HashMap::<u32, Game>::new();
+    let mut game_map = HashMap::<u32, Lobby>::new();
 
     //
     //for mut peer in server.peers() {}
 
-    game_map.insert(0, Game::new(ipaddr, "lobby_name".to_owned(), None));
+    game_map.insert(0, Lobby::new(ipaddr, "lobby_name".to_owned(), None));
 
     //Start loop
     let mut id = 0;
@@ -231,18 +229,19 @@ fn server_run() {
     }
 }
 
-fn send_packet(h: &mut enet::Host<u32>)
-{
+fn send_packet(h: &mut enet::Host<u32>) {
     for mut peer in h.peers().into_iter() {
-        if peer.data().is_none()
-        {
+        if peer.data().is_none() {
             continue;
         }
         peer.send_packet(
-            Packet::new("TESTING BIG MIGUEL".as_bytes(), enet::PacketMode::ReliableSequenced).unwrap(),
+            Packet::new(
+                "TESTING BIG MIGUEL".as_bytes(),
+                enet::PacketMode::ReliableSequenced,
+            )
+            .unwrap(),
             0,
         )
         .unwrap();
     }
-
 }

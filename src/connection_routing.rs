@@ -5,6 +5,7 @@
 use std::collections::HashMap;
 
 use enet::Packet;
+use igd::SearchOptions;
 use json::JsonValue;
 
 use crate::packet_enums::{packet_to_type, PacketType};
@@ -15,7 +16,7 @@ pub struct ClientData {
     name: Option<String>,
 }
 
-pub fn send_game_list_packet(games: HashMap<u32, Game>, client: &mut enet::Peer<u32>) {
+pub fn send_game_list_packet(games: HashMap<u32, Lobby>, client: &mut enet::Peer<u32>) {
     let mut packet = JsonValue::new_array();
 
     for (id, game) in games {
@@ -39,7 +40,7 @@ pub fn handle_packet(
     sender: &mut enet::Peer<u32>,
     packet: &mut Packet,
     channel_id: u8,
-    games: HashMap<u32, Game>,
+    games: HashMap<u32, Lobby>,
 ) {
     let packettype = packet_to_type(packet);
 
@@ -56,7 +57,7 @@ pub fn handle_packet(
     }
 }
 
-pub struct Game {
+pub struct Lobby {
     id: u32,
 
     host_ip: std::net::Ipv4Addr,
@@ -67,7 +68,7 @@ pub struct Game {
     checksum: String,
 }
 
-impl Game {
+impl Lobby {
     pub fn new(host_ip: std::net::Ipv4Addr, lobby_name: String, password: Option<String>) -> Self {
         let generated_id;
         generated_id = 321684210;
@@ -116,21 +117,25 @@ pub fn get_user_id(str: String) -> String {
     string
 }
 
-pub fn open_port(port: u16)
-{
+pub fn open_port(port: u16) {
     //OPEN THE PORTS
     match igd::search_gateway(Default::default()) {
         Err(ref err) => println!("Error: {}", err),
         Ok(gateway) => {
-            
             let local_address = match std::env::args().nth(1) {
                 Some(local_address) => local_address,
                 None => panic!("Expected IP address (cargo run <your IP here>)"),
             };
             let local_address = local_address.parse::<std::net::Ipv4Addr>().unwrap();
             let local_address = std::net::SocketAddrV4::new(local_address, port);
- 
-            match gateway.add_port(igd::PortMappingProtocol::UDP, port, local_address, 60, "add_port example") {
+
+            match gateway.add_port(
+                igd::PortMappingProtocol::UDP,
+                port,
+                local_address,
+                600000,
+                "add_port example",
+            ) {
                 Err(ref err) => {
                     println!("There was an error! {}", err);
                 }
@@ -139,6 +144,5 @@ pub fn open_port(port: u16)
                 }
             }
         }
-     }
- 
+    }
 }
