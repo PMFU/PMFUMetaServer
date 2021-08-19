@@ -8,8 +8,9 @@ use json::JsonValue;
 #[allow(unused_variables)]
 #[allow(array_into_iter)]
 #[allow(dead_code)]
-#[derive(enum_utils::FromStr, Debug)]
 
+
+#[derive(enum_utils::FromStr, Debug)]
 pub enum PacketType {
     None = 0,
     RequestServerList,

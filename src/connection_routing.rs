@@ -60,6 +60,7 @@ pub fn handle_packet(
     }
 }
 
+#[derive(Clone)]
 pub struct Lobby {
     id: u32,
 
@@ -87,17 +88,24 @@ impl Lobby {
         }
     }
 
-    pub fn serialize(self) -> String {
-        let mut string = String::new();
+    pub fn serialize(&mut self) -> String {
+        /*let mut string = String::new();
 
         string.push_str(self.lobby_name.as_str());
         string.push('\n');
-        string.push_str(self.checksum.as_str());
+        string.push_str(self.checksum.as_str());*/
 
-        string
+		let mut j = JsonValue::new_object();
+
+		j["lobbyname"] = JsonValue::String(self.lobby_name.to_owned());
+		j["ip"] = JsonValue::String(self.get_ip().to_string());
+		j["checksum"] = JsonValue::String(self.checksum.to_owned());
+		//j["id"].as_u32().insert(self.id);
+
+        j.dump()
     }
 
-    pub fn get_ip(self) -> std::net::Ipv4Addr {
+    pub fn get_ip(&self) -> std::net::Ipv4Addr {
         self.host_ip
     }
 }
