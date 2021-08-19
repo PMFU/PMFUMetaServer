@@ -1,17 +1,16 @@
+#![feature(inherent_ascii_escape)]
 #[allow(non_snake_case)]
 #[allow(unused_variables)]
 #[allow(array_into_iter)]
 #[allow(dead_code)]
+#[allow(unused_imports)]
 mod connection_routing;
 mod packet_enums;
 
-use std::{
-    collections::HashMap,
-    io::{stdout, Read, Write},
-};
+use std::{collections::HashMap, io::{stdout, Read, Write}};
 
 use connection_routing::{open_port, Lobby};
-use enet::{Event, Packet, PeerState};
+use enet::{Event, Packet};
 
 use crate::packet_enums::PacketType;
 
@@ -40,11 +39,9 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
                 peer.address().ip().to_string()
             );
 
-            *top_id += 1;
+            peer.set_data(Some(*top_id));
 
-            peer.set_data(Some(1));
-
-            //let addr = peer.address();
+			*top_id += 1;
         }
 
         Event::Disconnect(peer, id) => {
@@ -69,7 +66,6 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
 
             str = str.trim_end().to_string();
 
-            // sender.address().ip().to_string()
             println!("From channel: {} ", channel_id);
 
             println!(
@@ -77,11 +73,39 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
                 str,
                 sender.address().ip().to_string()
             );
+
+			match packet_enums::packet_to_type(packet) {
+				PacketType::None => {
+					//return PacketType::None;
+				}
+		
+				PacketType::RequestServerList => {
+					//Send the server list to the requesting client
+					println!("Sending Lobby List to user:{}", sender.data().expect("No User Here"));
+					connection_routing::send_game_list_packet(game_map, sender);
+				}
+		
+				PacketType::LobbyData => {
+					//Get the lobby data from the host sending it, and add it to the map
+					let j = packet_enums::packet_to_json(packet);
+					let lobbyname = j["lobbyname"].as_str().unwrap();
+
+					let lobby = Lobby::new(*sender.address().ip(), lobbyname.to_string(), None);
+
+					game_map.insert(*sender.data().expect("Host went missing idk"), lobby);
+				}
+
+				PacketType::SyncData => {}
+		
+				PacketType::NumTypes => {
+					//return PacketType::NumTypes;
+				}
+			}
         }
     };
 }
 
-//Client Run
+/*//Client Run
 fn client_run() {
     let port = 42069;
     let mut ipaddr = std::net::Ipv4Addr::LOCALHOST;
@@ -183,7 +207,7 @@ fn client_run() {
     }
 
     println!("Disconnected!");
-}
+}*/
 
 //Server Run
 fn server_run() {
@@ -196,7 +220,7 @@ fn server_run() {
     //Server init
     open_port(port);
 
-    let max_peers_count = 32;
+    let max_peers_count = 64;
 
     //Create a server on the localhost
     let mut server = enetapi
@@ -211,21 +235,20 @@ fn server_run() {
     server.flush();
 
     //Data Hash Maps
-    //let mut client_map = HashMap::<u32, ClientData>::new();
+
     let mut game_map = HashMap::<u32, Lobby>::new();
 
-    //
-    //for mut peer in server.peers() {}
-
-    game_map.insert(0, Lobby::new(ipaddr, "lobby_name".to_owned(), None));
+    //game_map.insert(0, Lobby::new(ipaddr, "lobby_name".to_owned(), None));
 
     //Start loop
     let mut id = 0;
 
+	send_packet(&mut server);
+
     loop {
         do_update(&mut server, &mut id, &mut game_map);
 
-        send_packet(&mut server);
+        //send_packet(&mut server);
     }
 }
 

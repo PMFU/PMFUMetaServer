@@ -2,6 +2,7 @@
 #[allow(unused_variables)]
 #[allow(array_into_iter)]
 #[allow(dead_code)]
+#[allow(unused_imports)]
 use std::collections::HashMap;
 
 use enet::Packet;
@@ -16,16 +17,16 @@ pub struct ClientData {
     name: Option<String>,
 }
 
-pub fn send_game_list_packet(games: HashMap<u32, Lobby>, client: &mut enet::Peer<u32>) {
+pub fn send_game_list_packet(games: &HashMap<u32, Lobby>, client: &mut enet::Peer<u32>) {
     let mut packet = JsonValue::new_array();
 
     for (id, game) in games {
         let mut gamejson = JsonValue::new_object();
 
-        gamejson["lobbyname"] = JsonValue::String(game.lobby_name);
-        gamejson["checksum"] = JsonValue::String(game.checksum);
+        gamejson["lobbyname"] = JsonValue::String(game.lobby_name.to_owned());
+        gamejson["checksum"] = JsonValue::String(game.checksum.to_owned());
 
-        packet[json::stringify(id)] = gamejson.into();
+        packet[json::stringify(id.to_owned())] = gamejson.into();
     }
 
     let mut str = format!("{:?}", PacketType::RequestServerList);
@@ -40,7 +41,7 @@ pub fn handle_packet(
     sender: &mut enet::Peer<u32>,
     packet: &mut Packet,
     channel_id: u8,
-    games: HashMap<u32, Lobby>,
+    games: &HashMap<u32, Lobby>,
 ) {
     let packettype = packet_to_type(packet);
 
@@ -52,6 +53,8 @@ pub fn handle_packet(
         }
 
         PacketType::LobbyData => {}
+
+        PacketType::SyncData => {}
 
         PacketType::NumTypes => {}
     }
