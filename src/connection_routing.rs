@@ -11,6 +11,7 @@ use json::JsonValue;
 
 use crate::packet_enums::{packet_to_type, PacketType};
 
+#[derive(Clone, Debug)]
 pub struct ClientData {
     id: u32,
 
@@ -29,7 +30,7 @@ pub fn send_game_list_packet(games: &HashMap<u32, Lobby>, client: &mut enet::Pee
         packet[json::stringify(id.to_owned())] = gamejson.into();
     }
 
-    let mut str = format!("{:?}", PacketType::RequestServerList);
+    let mut str = format!("{:?}\n", PacketType::RequestServerList);
     str.push_str(packet.pretty(1).as_str());
 
     let data_packet = Packet::new(str.as_bytes(), enet::PacketMode::ReliableSequenced).unwrap();
@@ -43,9 +44,9 @@ pub fn handle_packet(
     channel_id: u8,
     games: &HashMap<u32, Lobby>,
 ) {
-    let packettype = packet_to_type(packet);
+    let PacketType = packet_to_type(packet);
 
-    match packettype {
+    match PacketType {
         PacketType::None => {}
 
         PacketType::RequestServerList => {
@@ -95,12 +96,12 @@ impl Lobby {
         string.push('\n');
         string.push_str(self.checksum.as_str());*/
 
-		let mut j = JsonValue::new_object();
+        let mut j = JsonValue::new_object();
 
-		j["lobbyname"] = JsonValue::String(self.lobby_name.to_owned());
-		j["ip"] = JsonValue::String(self.get_ip().to_string());
-		j["checksum"] = JsonValue::String(self.checksum.to_owned());
-		//j["id"].as_u32().insert(self.id);
+        j["lobbyname"] = JsonValue::String(self.lobby_name.to_owned());
+        j["ip"] = JsonValue::String(self.get_ip().to_string());
+        j["checksum"] = JsonValue::String(self.checksum.to_owned());
+        //j["id"].as_u32().insert(self.id);
 
         j.dump()
     }

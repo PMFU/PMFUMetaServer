@@ -7,12 +7,15 @@
 mod connection_routing;
 mod packet_enums;
 
-use std::{collections::HashMap, io::{stdout, Read, Write}};
+use std::{
+    collections::HashMap,
+    io::{stdout, Read, Write},
+};
 
-use connection_routing::{open_port, Lobby};
+use connection_routing::Lobby;
 use enet::{Event, Packet};
 
-use crate::packet_enums::{PacketType, packet_to_json, packet_to_type};
+use crate::packet_enums::{packet_to_json, PacketType};
 
 fn main() {
     println!("Hello, world!");
@@ -41,7 +44,7 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
 
             peer.set_data(Some(*top_id));
 
-			*top_id += 1;
+            *top_id += 1;
         }
 
         Event::Disconnect(peer, id) => {
@@ -74,58 +77,59 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
                 sender.address().ip().to_string()
             );
 
-			match packet_enums::packet_to_type(packet) {
-				PacketType::None => {
-					//return PacketType::None;
-				}
-		
-				PacketType::RequestServerList => {
-					//Send the server list to the requesting client
-					println!("Sending Lobby/Lobby List to user:{}", sender.data().expect("No User Here"));
-					
-					let j = packet_to_json(packet);
-					if j["id"].is_empty()
-					{
-						connection_routing::send_game_list_packet(game_map, sender);
-					}
-					else {
-						let lobbyopt = game_map.get_mut(&j["id"].as_u32().unwrap());
-						match lobbyopt {
-							None => {
+            match packet_enums::packet_to_type(packet) {
+                PacketType::None => {
+                    //return PacketType::None;
+                }
 
-							}
+                PacketType::RequestServerList => {
+                    //Send the server list to the requesting client
+                    println!(
+                        "Sending Lobby/Lobby List to user: {}",
+                        sender.data().expect("No User Here")
+                    );
 
-							Some(lobby) => {
-								let mut str = format!("{:?}", PacketType::LobbyData);
-								let lobbystr = lobby.serialize();
-								str.push_str(&lobbystr);
-		
-								let packet_data = Packet::new(str.as_bytes(), enet::PacketMode::ReliableSequenced).unwrap();
+                    let j = packet_to_json(packet);
+                    if j["id"].is_empty() {
+                        connection_routing::send_game_list_packet(game_map, sender);
+                    } else {
+                        let lobbyopt = game_map.get_mut(&j["id"].as_u32().unwrap());
+                        match lobbyopt {
+                            None => {}
 
-								sender.send_packet(packet_data, 0).unwrap();
-							}
-						}
-					}
-				}
-		
-				PacketType::LobbyData => {
-					//Get the lobby data from the host sending it, and add it to the map
-					let j = packet_to_json(packet);
-					let lobbyname = j["lobbyname"].as_str().unwrap();
+                            Some(lobby) => {
+                                let mut str = format!("{:?}\n", PacketType::LobbyData);
+                                let lobbystr = lobby.serialize();
+                                str.push_str(&lobbystr);
 
-					let lobby = Lobby::new(*sender.address().ip(), lobbyname.to_string(), None);
+                                let packet_data = Packet::new(
+                                    str.as_bytes(),
+                                    enet::PacketMode::ReliableSequenced,
+                                )
+                                .unwrap();
 
-					game_map.insert(*sender.data().expect("Host went missing idk"), lobby);
-				}
+                                sender.send_packet(packet_data, 0).unwrap();
+                            }
+                        }
+                    }
+                }
 
-				PacketType::SyncData => {
-					
-				}
-		
-				PacketType::NumTypes => {
-					//return PacketType::NumTypes;
-				}
-			}
+                PacketType::LobbyData => {
+                    //Get the lobby data from the host sending it, and add it to the map
+                    let j = packet_to_json(packet);
+                    let lobbyname = j["lobbyname"].as_str().unwrap();
+
+                    let lobby = Lobby::new(*sender.address().ip(), lobbyname.to_string(), None);
+
+                    game_map.insert(*sender.data().expect("Host went missing idk"), lobby);
+                }
+
+                PacketType::SyncData => {}
+
+                PacketType::NumTypes => {
+                    //return PacketType::NumTypes;
+                }
+            }
         }
     };
 }
@@ -268,9 +272,7 @@ fn server_run() {
     //Start loop
     let mut id = 0;
 
-
     loop {
         do_update(&mut server, &mut id, &mut game_map);
-
     }
 }
