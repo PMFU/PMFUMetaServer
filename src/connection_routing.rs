@@ -101,13 +101,17 @@ impl Lobby {
         j["lobbyname"] = JsonValue::String(self.lobby_name.to_owned());
         j["ip"] = JsonValue::String(self.get_ip().to_string());
         j["checksum"] = JsonValue::String(self.checksum.to_owned());
-        //j["id"].as_u32().insert(self.id);
+        j["id"].as_u32().insert(self.id);
 
         j.dump()
     }
 
     pub fn get_ip(&self) -> std::net::Ipv4Addr {
         self.host_ip
+    }
+
+    pub fn get_id(&mut self) -> &mut u32 {
+        &mut self.id
     }
 }
 

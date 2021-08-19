@@ -13,7 +13,8 @@ pub enum PacketType {
     None = 0,
     RequestServerList, //Has one field, "id", if 0 then give full serverlist, else, check if the ID is valid and send the lobby info
     LobbyData,         //If received, set up a new game, serde's to the vars:
-    // "lobbyname", "checksum"
+    // "lobbyname", "checksum", "id", "password"
+    
     SyncData = 5, //Saves and such idk fully yet
     NumTypes,
 }
@@ -23,7 +24,13 @@ pub fn packet_to_type(packet: &mut Packet) -> PacketType {
 
     packet.data().read_line(&mut data).unwrap();
 
-    match data.parse::<PacketType>().unwrap() {
+    let result = data.parse::<PacketType>();
+
+    if result.is_err() {
+        return PacketType::None;
+    }
+
+    match result.unwrap() {
         PacketType::None => {
             return PacketType::None;
         }

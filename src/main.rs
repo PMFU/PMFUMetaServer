@@ -79,7 +79,7 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
 
             match packet_enums::packet_to_type(packet) {
                 PacketType::None => {
-                    //return PacketType::None;
+                    //Nothing
                 }
 
                 PacketType::RequestServerList => {
@@ -95,12 +95,14 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
                     } else {
                         let lobbyopt = game_map.get_mut(&j["id"].as_u32().unwrap());
                         match lobbyopt {
-                            None => {}
+                            None => {
+                                println!("Requested a lobby id that doesn't exist!");
+                            }
 
                             Some(lobby) => {
                                 let mut str = format!("{:?}\n", PacketType::LobbyData);
-                                let lobbystr = lobby.serialize();
-                                str.push_str(&lobbystr);
+
+                                str.push_str(&lobby.serialize());
 
                                 let packet_data = Packet::new(
                                     str.as_bytes(),
@@ -118,16 +120,21 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
                     //Get the lobby data from the host sending it, and add it to the map
                     let j = packet_to_json(packet);
                     let lobbyname = j["lobbyname"].as_str().unwrap();
+                    let lobbyid = j["id"].as_u32().unwrap();
 
-                    let lobby = Lobby::new(*sender.address().ip(), lobbyname.to_string(), None);
+                    let mut lobby = Lobby::new(*sender.address().ip(), lobbyname.to_string(), None);
+
+                    *lobby.get_id() = lobbyid;
 
                     game_map.insert(*sender.data().expect("Host went missing idk"), lobby);
                 }
 
-                PacketType::SyncData => {}
+                PacketType::SyncData => {
+                    //Something with saves idk
+                }
 
                 PacketType::NumTypes => {
-                    //return PacketType::NumTypes;
+                    //Does nothing
                 }
             }
         }
