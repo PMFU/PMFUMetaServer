@@ -31,7 +31,7 @@ pub fn send_game_list_packet(games: &HashMap<u32, Lobby>, client: &mut enet::Pee
     }
 
     let mut str = format!("{:?}\n", PacketType::RequestServerList);
-    str.push_str(packet.pretty(1).as_str());
+    str.push_str(packet.dump().as_str());
 
     let data_packet = Packet::new(str.as_bytes(), enet::PacketMode::ReliableSequenced).unwrap();
 

@@ -23,7 +23,7 @@ pub fn packet_to_type(packet: &mut Packet) -> PacketType {
 
     packet.data().read_line(&mut data).unwrap();
 
-    let result = data.parse::<PacketType>();
+    let result = data.trim_end().to_string().parse::<PacketType>();
 
     if result.is_err() {
         return PacketType::None;

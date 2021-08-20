@@ -7,21 +7,20 @@
 mod connection_routing;
 mod packet_enums;
 
-use std::{collections::HashMap, io::Read, process::Command};
+use std::{collections::HashMap, io::Read};
 
 use connection_routing::Lobby;
 use enet::{Event, Packet};
 
-use crate::packet_enums::{packet_to_json, PacketType};
+use crate::packet_enums::{packet_to_json, packet_to_type, PacketType};
 
 fn main() {
     println!("=========== META SERVER =========");
 
     //Fanciful clearing the terminal screen
-    let mut output = Command::new("cls")
-        .spawn()
-        .expect("Could not clear the screen.");
-    output.wait().unwrap();
+    //print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
+    // or
+    print!("\x1B[2J\x1B[1;1H");
 
     println!("=========== INITIALIZING =========");
 
@@ -81,14 +80,14 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
 
             println!("From channel: {} ", channel_id);
 
-            println!(
+            /*println!(
                 "Data ({} bytes): {} \nFrom IP: {}",
                 length,
                 str,
                 sender.address().ip().to_string()
-            );
+            );*/
 
-            match packet_enums::packet_to_type(packet) {
+            match packet_to_type(packet) {
                 PacketType::None => {
                     //Nothing
                 }
