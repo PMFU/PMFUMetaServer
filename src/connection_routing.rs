@@ -103,7 +103,7 @@ impl Lobby {
         j["lobbyname"] = JsonValue::String(self.lobby_name.to_owned());
         j["ip"] = JsonValue::String(self.get_ip().to_string());
         j["checksum"] = JsonValue::String(self.checksum.to_owned());
-        j["id"].as_u32().insert(self.id);
+        j["id"] = self.id.into();
 
         j.dump()
     }

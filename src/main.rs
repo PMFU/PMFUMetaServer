@@ -45,6 +45,9 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
             peer.set_data(Some(*top_id));
 
             *top_id += 1;
+
+			let connection_packet = Packet::new("Here is the testing packet!".as_bytes(), enet::PacketMode::ReliableSequenced).unwrap();
+			peer.send_packet(connection_packet, 0).unwrap();
         }
 
         Event::Disconnect(peer, id) => {
