@@ -7,11 +7,7 @@
 mod connection_routing;
 mod packet_enums;
 
-use std::{
-    collections::HashMap,
-    io::{stdout, Read, Write},
-	process::Command,
-};
+use std::{collections::HashMap, io::Read, process::Command};
 
 use connection_routing::Lobby;
 use enet::{Event, Packet};
@@ -21,9 +17,11 @@ use crate::packet_enums::{packet_to_json, PacketType};
 fn main() {
     println!("=========== META SERVER =========");
 
-	//Fanciful clearing the terminal screen
-    let mut output = Command::new("cls").spawn().expect("Could not clear the screen.");
-	output.wait().unwrap();
+    //Fanciful clearing the terminal screen
+    let mut output = Command::new("cls")
+        .spawn()
+        .expect("Could not clear the screen.");
+    output.wait().unwrap();
 
     println!("=========== INITIALIZING =========");
 
@@ -48,8 +46,12 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
 
             *top_id += 1;
 
-			let connection_packet = Packet::new("Here is the testing packet!\n".as_bytes(), enet::PacketMode::ReliableSequenced).unwrap();
-			peer.send_packet(connection_packet, 0).unwrap();
+            let connection_packet = Packet::new(
+                "Here is the testing packet!\n".as_bytes(),
+                enet::PacketMode::ReliableSequenced,
+            )
+            .unwrap();
+            peer.send_packet(connection_packet, 0).unwrap();
         }
 
         Event::Disconnect(peer, id) => {
@@ -69,7 +71,7 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
             channel_id,
             packet,
         } => {
-			println!("Received Packet!");
+            println!("Received Packet!");
 
             let mut str = String::new();
             let length = packet
@@ -80,7 +82,8 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
             println!("From channel: {} ", channel_id);
 
             println!(
-                "Data: {} \nFrom IP: {}",
+                "Data ({} bytes): {} \nFrom IP: {}",
+                length,
                 str,
                 sender.address().ip().to_string()
             );
