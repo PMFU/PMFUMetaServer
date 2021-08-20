@@ -19,7 +19,7 @@ pub struct ClientData {
 }
 
 pub fn send_game_list_packet(games: &HashMap<u32, Lobby>, client: &mut enet::Peer<u32>) {
-    let mut packet = JsonValue::new_array();
+    let mut packet = JsonValue::new_object();
 
     for (id, game) in games {
         let mut gamejson = JsonValue::new_object();
@@ -36,6 +36,8 @@ pub fn send_game_list_packet(games: &HashMap<u32, Lobby>, client: &mut enet::Pee
     let data_packet = Packet::new(str.as_bytes(), enet::PacketMode::ReliableSequenced).unwrap();
 
     client.send_packet(data_packet, 0).unwrap();
+
+    println!("\nGame Data List Packet: \n{}\n", str);
 }
 
 pub fn handle_packet(

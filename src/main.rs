@@ -65,9 +65,10 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
             packet,
         } => {
             let mut str = String::new();
-            packet.data().read_to_string(&mut str).unwrap();
-
-            str = str.trim_end().to_string();
+            let length = packet
+                .data()
+                .read_to_string(&mut str)
+                .expect("Apparently this isn't valid utf8 or smth");
 
             println!("From channel: {} ", channel_id);
 
@@ -111,6 +112,12 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
                                 .unwrap();
 
                                 sender.send_packet(packet_data, 0).unwrap();
+
+                                println!(
+                                    "Sent Lobby Data of ID {} to User IP: {}",
+                                    j["id"].as_u32().unwrap(),
+                                    lobby.get_ip().to_string()
+                                );
                             }
                         }
                     }
@@ -125,6 +132,13 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
                     let mut lobby = Lobby::new(*sender.address().ip(), lobbyname.to_string(), None);
 
                     *lobby.get_id() = lobbyid;
+
+                    println!(
+                        "Made lobby => Name: {}, IP: {}, ID: {}",
+                        lobbyname,
+                        sender.address().ip().to_string(),
+                        lobbyid
+                    );
 
                     game_map.insert(*sender.data().expect("Host went missing idk"), lobby);
                 }
@@ -274,7 +288,11 @@ fn server_run() {
 
     let mut game_map = HashMap::<u32, Lobby>::new();
 
-    //game_map.insert(0, Lobby::new(ipaddr, "lobby_name".to_owned(), None));
+    //Test one
+    game_map.insert(
+        1234,
+        Lobby::new(ipaddr, "A Test Lobby, not real".to_owned(), None),
+    );
 
     //Start loop
     let mut id = 0;
