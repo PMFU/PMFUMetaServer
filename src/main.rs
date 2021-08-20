@@ -10,6 +10,7 @@ mod packet_enums;
 use std::{
     collections::HashMap,
     io::{stdout, Read, Write},
+	process::Command,
 };
 
 use connection_routing::Lobby;
@@ -18,13 +19,14 @@ use enet::{Event, Packet};
 use crate::packet_enums::{packet_to_json, PacketType};
 
 fn main() {
-    println!("Hello, world!");
+    println!("=========== META SERVER =========");
 
-    stdout().flush().unwrap();
+	//Fanciful clearing the terminal screen
+    let mut output = Command::new("cls").spawn().expect("Could not clear the screen.");
+	output.wait().unwrap();
 
-    println!("{:?}", PacketType::RequestServerList);
+    println!("=========== INITIALIZING =========");
 
-    //client_run();
     server_run();
 }
 
@@ -46,7 +48,7 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
 
             *top_id += 1;
 
-			let connection_packet = Packet::new("Here is the testing packet!".as_bytes(), enet::PacketMode::ReliableSequenced).unwrap();
+			let connection_packet = Packet::new("Here is the testing packet!\n".as_bytes(), enet::PacketMode::ReliableSequenced).unwrap();
 			peer.send_packet(connection_packet, 0).unwrap();
         }
 
@@ -67,6 +69,8 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
             channel_id,
             packet,
         } => {
+			println!("Received Packet!");
+
             let mut str = String::new();
             let length = packet
                 .data()
