@@ -304,7 +304,7 @@ fn server_run() {
     );
 
     //Start loop
-    let mut id = 0;
+    let mut id = 1;
 
     loop {
         do_update(&mut server, &mut id, &mut game_map);
