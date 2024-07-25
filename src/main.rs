@@ -1,4 +1,4 @@
-#![feature(inherent_ascii_escape)]
+// #![feature(inherent_ascii_escape)]
 #[allow(non_snake_case)]
 #[allow(unused_variables)]
 #[allow(array_into_iter)]
@@ -13,6 +13,19 @@ use connection_routing::Lobby;
 use enet::{Event, Packet};
 
 use crate::packet_enums::{packet_to_json, packet_to_type, PacketType};
+
+// pub struct LobbyDisplayInfo
+// {
+//     Ene
+// 	name : String;
+// 	checksum : String;
+
+// 	std::string save_or_scenario_name;
+
+// 	bool has_password;
+
+// 	player_count : u32;
+// }
 
 fn main() {
     println!("=========== META SERVER =========");
@@ -31,7 +44,11 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
     let event = server.service(100).unwrap();
 
     if event.is_none() {
+        println!("No event...");
         return;
+    }
+    else {
+        println!("Found event!");
     }
 
     match &mut event.unwrap() {
@@ -48,8 +65,7 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
             let connection_packet = Packet::new(
                 "Here is the testing packet!\n".as_bytes(),
                 enet::PacketMode::ReliableSequenced,
-            )
-            .unwrap();
+            ).unwrap();
             peer.send_packet(connection_packet, 0).unwrap();
         }
 
@@ -73,7 +89,7 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
             println!("Received Packet!");
 
             let mut str = String::new();
-            let length = packet
+            let _length = packet
                 .data()
                 .read_to_string(&mut str)
                 .expect("Apparently this isn't valid utf8 or smth");
@@ -277,7 +293,10 @@ fn server_run() {
     let enetapi = enet::Enet::new().unwrap();
 
     //Server init
-    //open_port(port);
+    // if check_if_port_open(port)
+    // {    
+    //     open_port(port);
+    // }
 
     let max_peers_count = 64;
 
@@ -294,7 +313,6 @@ fn server_run() {
     server.flush();
 
     //Data Hash Maps
-
     let mut game_map = HashMap::<u32, Lobby>::new();
 
     //Test one

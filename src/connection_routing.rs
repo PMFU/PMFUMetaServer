@@ -11,33 +11,24 @@ use json::JsonValue;
 
 use crate::packet_enums::{packet_to_type, PacketType};
 
-#[derive(Clone, Debug)]
-pub struct ClientData {
-    id: u32,
-
-    name: Option<String>,
-}
 
 pub fn send_game_list_packet(games: &HashMap<u32, Lobby>, client: &mut enet::Peer<u32>) {
     let mut packet = JsonValue::new_object();
 
-    for (id, game) in games {
-        let mut gamejson = JsonValue::new_object();
-
-        gamejson["lobbyname"] = JsonValue::String(game.lobby_name.to_owned());
-        gamejson["checksum"] = JsonValue::String(game.checksum.to_owned());
-
-        packet[json::stringify(id.to_owned())] = gamejson.into();
+    for (id, game) in games
+    {
+        packet["lobbies"].push(game.to_json()).unwrap();
     }
 
-    let mut str = format!("{:?}\n", PacketType::RequestServerList);
-    str.push_str(packet.dump().as_str());
+    // let mut str = format!("{:?}\n", PacketType::RequestServerList);
+    // str.push_str(packet.dump().as_str());
 
-    let data_packet = Packet::new(str.as_bytes(), enet::PacketMode::ReliableSequenced).unwrap();
+
+    let data_packet = Packet::new(packet.dump().as_bytes(), enet::PacketMode::ReliableSequenced).unwrap();
 
     client.send_packet(data_packet, 0).unwrap();
 
-    println!("\nGame Data List Packet: \n{}\n", str);
+    println!("\nGame Data List Packet: \n{}\n", packet.dump());
 }
 
 pub fn handle_packet(
@@ -70,9 +61,11 @@ pub struct Lobby {
     host_ip: std::net::Ipv4Addr,
 
     lobby_name: String,
-    password: Option<String>,
-
     checksum: String,
+    save_or_scenario_name: String,
+
+    password: Option<String>,
+    player_count: u32
 }
 
 impl Lobby {
@@ -86,26 +79,27 @@ impl Lobby {
             id: generated_id,
             host_ip,
             lobby_name,
-            password,
             checksum: chsum,
+            save_or_scenario_name: "GC_NAME".to_owned(),
+            password,
+            player_count: 0
         }
     }
 
-    pub fn serialize(&mut self) -> String {
-        /*let mut string = String::new();
+    pub fn serialize(&self) -> String {
+        
+        self.to_json().dump()
+    }
 
-        string.push_str(self.lobby_name.as_str());
-        string.push('\n');
-        string.push_str(self.checksum.as_str());*/
-
+    pub fn to_json(&self) -> JsonValue
+    {
         let mut j = JsonValue::new_object();
-
-        j["lobbyname"] = JsonValue::String(self.lobby_name.to_owned());
+        j["name"] = JsonValue::String(self.lobby_name.to_owned());
         j["ip"] = JsonValue::String(self.get_ip().to_string());
         j["checksum"] = JsonValue::String(self.checksum.to_owned());
         j["id"] = self.id.into();
-
-        j.dump()
+        j["save_or_scenario_name"] = JsonValue::String(self.save_or_scenario_name.to_owned());
+        j
     }
 
     pub fn get_ip(&self) -> std::net::Ipv4Addr {
@@ -152,7 +146,7 @@ pub fn open_port(port: u16) {
                 port,
                 local_address,
                 600000,
-                "add_port example",
+                "Opening Port to run a Bathsalts Metaserver Matchmaker",
             ) {
                 Err(ref err) => {
                     println!("There was an error! {}", err);
