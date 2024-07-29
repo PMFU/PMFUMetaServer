@@ -14,16 +14,18 @@ use crate::packet_enums::{packet_to_type, PacketType};
 
 pub fn send_game_list_packet(games: &HashMap<u32, Lobby>, client: &mut enet::Peer<u32>) {
     let mut packet = JsonValue::new_object();
+    packet["lobbies"] = JsonValue::new_array();
 
+    let mut idx = 0;
     for (id, game) in games
     {
-        packet["lobbies"].push(game.to_json()).unwrap();
+        let lob_json = game.to_json();
+        packet["lobbies"][idx] = lob_json;
+        idx += 1;
     }
 
-    // let mut str = format!("{:?}\n", PacketType::RequestServerList);
-    // str.push_str(packet.dump().as_str());
-
-
+    let mut str = format!("{:?}\n", PacketType::RequestServerList);
+    str.push_str(packet.dump().as_str());
     let data_packet = Packet::new(packet.dump().as_bytes(), enet::PacketMode::ReliableSequenced).unwrap();
 
     client.send_packet(data_packet, 0).unwrap();

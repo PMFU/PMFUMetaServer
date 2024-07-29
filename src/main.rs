@@ -41,10 +41,10 @@ fn main() {
 }
 
 fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut HashMap<u32, Lobby>) {
-    let event = server.service(100).unwrap();
+    let event = server.service(250).unwrap();
 
     if event.is_none() {
-        println!("No event...");
+        // println!("No event...");
         return;
     }
     else {
@@ -63,7 +63,7 @@ fn do_update(server: &mut enet::Host<u32>, top_id: &mut u32, game_map: &mut Hash
             *top_id += 1;
 
             let connection_packet = Packet::new(
-                "Here is the testing packet!\n".as_bytes(),
+                "0\n{}\n".as_bytes(),
                 enet::PacketMode::ReliableSequenced,
             ).unwrap();
             peer.send_packet(connection_packet, 0).unwrap();
